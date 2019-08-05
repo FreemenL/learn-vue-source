@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    /**
+     * base1 版本
+    */
+      // const definedReactive = (obj,key,value,cb) =>{
+      //     Object.defineProperty(obj,key,{
+      //       enumerable: true,
+      //       configurable: true,
+      //       get(){
+      //         return value;
+      //       },
+      //       set(newVal){
+      //         value = newVal;
+      //         cb();
+      //       }
+      //     })
+      // }
+      // const observe = (data,cb)=> {
+      //   Object.keys(data).forEach((item)=>definedReactive(data,item,data[item],cb))
+      // }
+
+      // class Vue{
+      //   constructor(options){
+      //       this._data = options.data;
+      //       observe(this._data,options.render);
+      //   } 
+      // }
+
+      // let app = new Vue({
+      //   el: "#app",
+      //   data: {
+      //     text: "text",
+      //     text2: "text2",
+      //   },
+      //   render(){
+      //     console.log('render');
+      //   }
+      // });
+      /**
+       * base2 版本
+      */
+
+      const definedReactive = (obj,key,value,cb) =>{
+          Object.defineProperty(obj,key,{
+            enumerable: true,
+            configurable: true,
+            get(){
+              return value;
+            },
+            set(newVal){
+              value = newVal;
+              cb();
+            }
+          })
+      }
+
+      const observe = (data,cb)=> {
+        Object.keys(data).forEach((item)=>definedReactive(data,item,data[item],cb))
+      }
+      class Vue{
+        constructor(options){
+            this._data = options.data;
+            _proxy.call(this, options.data);
+            observe(this._data,options.render);
+        } 
+      }
+
+      /*代理*/
+      function _proxy (data) {
+          const that = this;
+          Object.keys(data).forEach(key => {
+              Object.defineProperty(that, key, {
+                  configurable: true,
+                  enumerable: true,
+                  get: function proxyGetter () {
+                      return that._data[key];
+                  },
+                  set: function proxySetter (val) {
+                      that._data[key] = val;
+                  }
+              })
+          });
+      }
+
+      let app = new Vue({
+        el: "#app",
+        data: {
+          text: "text",
+          text2: "text2",
+        },
+        render(){
+          console.log('render');
+        }
+      });
+      //可以用app.text代替app._data.text了。
+      app.text = "testrender";
+      app.text = "re";
+      console.log('app :', app._data);
+      app.text = "text_render";
+
+  </script>
+</body>
+</html>
